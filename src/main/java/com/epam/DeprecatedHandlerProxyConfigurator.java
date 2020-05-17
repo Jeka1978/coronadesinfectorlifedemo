@@ -1,45 +1,36 @@
 package com.epam;
 
-import net.sf.cglib.proxy.Enhancer;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
 
 /**
  * @author Evgeny Borisov
+ * @author Моряк
  */
 public class DeprecatedHandlerProxyConfigurator implements ProxyConfigurator {
     @Override
-    public Object replaceWithProxyIfNeeded(Object t, Class implClass) {
-        //todo make support for @Deprecate above methods, not class
+    public <T> T replaceWithProxyIfNeeded(T t, Class<T> implClass) {
         if (implClass.isAnnotationPresent(Deprecated.class)) {
-
-            if (implClass.getInterfaces().length == 0) {
-                return Enhancer.create(implClass, new net.sf.cglib.proxy.InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        return getInvocationHandlerLogic(method, args, t);
-                    }
-                });
-            }
-
-
-            return Proxy.newProxyInstance(implClass.getClassLoader(), implClass.getInterfaces(), new InvocationHandler() {
-                @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    return getInvocationHandlerLogic(method, args, t);
-                }
+            return proxyWithLogic(implClass, (proxy, method, args) -> {
+                System.out.println("Наташ, не трогай этот " + implClass.getSimpleName() + ", он плохой!");
+                return method.invoke(t, args);
             });
-        } else {
+        }
+        Set<String> deprecatedMethods = Arrays.stream(implClass.getMethods())
+                .filter(m -> m.isAnnotationPresent(Deprecated.class))
+                .map(Method::getName)
+                .collect(toSet());
+        if (deprecatedMethods.isEmpty()) {
             return t;
         }
-
-    }
-
-    private Object getInvocationHandlerLogic(Method method, Object[] args, Object t) throws IllegalAccessException, InvocationTargetException {
-        System.out.println("********** что ж ты делаешь урод!! ");
-        return method.invoke(t, args);
+        return proxyWithLogic(implClass, (proxy, method, args) -> {
+            if (deprecatedMethods.contains(method.getName())) {
+                System.out.println("Наташ, ну хватит! Этот метод " + method.getName() + " в " + implClass + " уже не тот!");
+            }
+            return method.invoke(t, args);
+        });
     }
 }
