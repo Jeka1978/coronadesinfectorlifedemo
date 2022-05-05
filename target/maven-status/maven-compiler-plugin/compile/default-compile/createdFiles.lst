@@ -4,6 +4,7 @@ com/epam/Announcer.class
 com/epam/Policeman.class
 com/epam/PolicemanImpl.class
 com/epam/ObjectFactory.class
+com/epam/AngryPoliceman.class
 com/epam/JavaConfig.class
 com/epam/Main.class
 com/epam/ConsoleAnnouncer.class

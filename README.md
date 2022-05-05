@@ -5,6 +5,7 @@ https://www.youtube.com/watch?v=rd6wxPzXQvo
 ## Quickstart
 
 ```sh
+mvn compile && \
 mvn exec:java -Dexec.mainClass=com.epam.Main --quiet
 ```
 
